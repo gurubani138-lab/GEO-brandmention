@@ -3,40 +3,53 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from "next-auth/react";
 import { 
-  LayoutDashboard, 
+  Layout, 
   Database, 
   PenTool, 
   Eye, 
-  BarChart3, 
+  BarChart2, 
   Settings,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Lightbulb,
+  LogOut,
+  Sparkles,
+  MessageSquarePlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { name: '工作台', href: '/', icon: LayoutDashboard },
-  { name: '资产中心', href: '/assets', icon: Database },
-  { name: '内容生产', href: '/content', icon: PenTool },
-  { name: '问答观测', href: '/observe', icon: Eye },
-  { name: '可见性看板', href: '/dashboard', icon: BarChart3 },
-  { name: '审核中心', href: '/review', icon: ShieldCheck },
-  { name: '系统设置', href: '/settings', icon: Settings },
+  { name: '运营看板', href: '/', icon: Layout },
+  { name: '资产管理', href: '/assets', icon: Database },
+  { name: '内容生产', href: '/content', icon: MessageSquarePlus },
+  { name: '观测中心', href: '/observe', icon: Eye },
+  { name: '可见性分析', href: '/dashboard', icon: BarChart2 },
+  { name: '内容审核', href: '/review', icon: ShieldCheck },
+  { name: '优化建议', href: '/optimize', icon: Lightbulb },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   return (
-    <div className="w-64 border-r bg-slate-50/50 h-screen flex flex-col fixed left-0 top-0">
-      <div className="p-6">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          GEO 智能体
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">Brand AI Visibility Cloud</p>
+    <div className="w-60 border-r border-[#E5E5E1] bg-white h-screen flex flex-col fixed left-0 top-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      {/* Brand Header */}
+      <div className="p-8 pb-10">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-9 h-9 bg-[#1D1D1B] rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
+            <Sparkles className="text-white w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-[#1D1D1B]">BrandMention</h1>
+            <p className="text-[9px] font-bold text-[#D97757] uppercase tracking-[0.2em]">Geo Agent Pro</p>
+          </div>
+        </Link>
       </div>
       
+      {/* Navigation */}
       <nav className="flex-1 px-4 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -45,31 +58,37 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                "claude-nav-link group",
                 isActive 
-                  ? "bg-white text-blue-600 shadow-sm border border-slate-200" 
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-[#F0EFE9] text-[#1D1D1B]" 
+                  : "text-[#6B6B66] hover:bg-[#F5F5F3] hover:text-[#1D1D1B]"
               )}
             >
-              <div className="flex items-center gap-3">
-                <item.icon className={cn("w-4 h-4", isActive ? "text-blue-600" : "text-slate-400")} />
-                {item.name}
-              </div>
-              {isActive && <ChevronRight className="w-3 h-3 text-blue-400" />}
+              <item.icon className={cn("w-4.5 h-4.5 transition-colors", isActive ? "text-[#D97757]" : "text-[#A1A19A] group-hover:text-[#6B6B66]")} />
+              {item.name}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t">
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-            JD
+      {/* Footer / User Profile */}
+      <div className="p-6 border-t border-[#F0EFE9]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#D97757] font-bold text-xs">
+              {session?.user?.name?.[0] || 'A'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-[#1D1D1B] truncate">{session?.user?.name || '管理员'}</p>
+              <p className="text-[10px] text-[#A1A19A] font-medium uppercase tracking-tighter">Enterprise Plan</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-900 truncate">京东云官方账号</p>
-            <p className="text-[10px] text-slate-500 truncate">专业版 | 5 品牌</p>
-          </div>
+          <button 
+            onClick={() => signOut()}
+            className="p-1.5 hover:bg-[#F5F5F3] rounded-lg text-[#A1A19A] hover:text-red-500 transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>

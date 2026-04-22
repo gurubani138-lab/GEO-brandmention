@@ -3,23 +3,43 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 248, 250, 252;
+  --background: #F9F9F8;
+  --foreground: #1D1D1B;
+  --card: #FFFFFF;
+  --card-border: #E5E5E1;
+  --primary: #D97757; /* 借鉴 Claude 橙色调 */
+  --secondary: #6B6B66;
+  --accent: #F0EFE9;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .claude-card {
+    @apply bg-white border border-[#E5E5E1] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)];
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .claude-card:hover {
+    @apply border-[#D1D1CD] shadow-[0_4px_12px_rgba(0,0,0,0.03)];
+  }
+
+  .claude-nav-link {
+    @apply flex items-center gap-3 px-4 py-2.5 text-[14px] font-medium rounded-xl transition-all;
+  }
+
+  .claude-button-primary {
+    @apply bg-[#1D1D1B] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-800 transition-all active:scale-[0.98];
+  }
+  
+  .claude-input {
+    @apply w-full p-4 bg-white border border-[#E5E5E1] rounded-xl text-sm focus:ring-2 focus:ring-orange-100 focus:border-[#D97757] outline-none transition-all;
   }
 }

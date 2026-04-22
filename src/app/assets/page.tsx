@@ -1,97 +1,116 @@
-import { prisma } from '@/lib/prisma';
-import { Plus, Search, Filter, MoreVertical } from 'lucide-react';
+"use client";
 
-export default async function AssetsPage() {
-  const brands = await prisma.brand.findMany({
-    include: {
-      _count: {
-        select: { products: true, faqs: true, evidences: true }
-      }
-    }
-  });
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Loader2, Database, ChevronRight, Layout, LayoutGrid } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+export default function AssetsPage() {
+  const [brands, setBrands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ name: '', industry: '', positioning: '', coreValues: '' });
+
+  const fetchBrands = async () => {
+    try {
+      const res = await fetch('/api/asset/brand');
+      const data = await res.json();
+      setBrands(data.data || []);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchBrands(); }, []);
+
+  const handleAddBrand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/asset/brand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      if (res.ok) { setShowModal(false); fetchBrands(); setForm({ name: '', industry: '', positioning: '', coreValues: '' }); }
+    } catch (e) { alert('添加失败'); }
+  };
 
   return (
-    <div className="p-8">
-      <header className="flex justify-between items-center mb-8">
+    <div className="w-full">
+      <header className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">资产中心</h2>
-          <p className="text-slate-500 text-sm mt-1">管理品牌核心资料、产品参数及合规证据链</p>
+          <h2 className="text-2xl font-bold text-[#1D1D1B]">资产管理</h2>
+          <p className="text-[#6B6B66] text-sm mt-1">Brand Assets & Knowledge Base</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm">
+        <button onClick={() => setShowModal(true)} className="claude-button-primary scale-90 flex items-center gap-2">
           <Plus className="w-4 h-4" />
           新增品牌
         </button>
       </header>
 
-      {/* 搜索与过滤 */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-8">
         <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="搜索品牌或产品名称..." 
-            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-          />
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#A1A19A]" />
+          <input type="text" placeholder="快速筛选..." className="claude-input pl-11 py-2" />
         </div>
-        <button className="px-4 py-2 border rounded-lg text-sm font-medium text-slate-600 flex items-center gap-2 hover:bg-white transition-colors">
-          <Filter className="w-4 h-4" />
-          筛选
-        </button>
       </div>
 
-      {/* 品牌列表 */}
-      <div className="grid grid-cols-1 gap-4">
-        {brands.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-dashed rounded-xl">
-            <p className="text-slate-400 text-sm">暂无品牌数据，请先新增品牌</p>
-          </div>
-        ) : (
-          brands.map((brand) => (
-            <div key={brand.id} className="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow group">
-              <div className="flex justify-between items-start mb-4">
+      {loading ? (
+        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-[#D97757] w-8 h-8" /></div>
+      ) : brands.length === 0 ? (
+        <div className="claude-card p-24 text-center border-dashed bg-white">
+          <Database className="w-12 h-12 text-[#E5E5E1] mx-auto mb-4" />
+          <p className="text-xs text-[#A1A19A] font-bold uppercase tracking-widest">尚未接入任何品牌资产</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {brands.map((brand) => (
+            <div key={brand.id} className="claude-card p-6 flex flex-col justify-between bg-white hover:border-[#D97757]/30 transition-all cursor-pointer">
+              <div className="flex items-start justify-between mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-[#F5F5F3] flex items-center justify-center text-[#1D1D1B] font-black text-sm border border-[#E5E5E1]">
                     {brand.name.substring(0, 1)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900">{brand.name}</h3>
-                    <p className="text-xs text-slate-500">{brand.industry} | {brand.status === 'active' ? '正常运营' : '草稿'}</p>
+                    <h3 className="font-bold text-[#1D1D1B] text-base">{brand.name}</h3>
+                    <p className="text-[10px] text-[#A1A19A] font-black uppercase tracking-widest">{brand.industry}</p>
                   </div>
                 </div>
-                <button className="p-1 hover:bg-slate-50 rounded text-slate-400">
-                  <MoreVertical className="w-4 h-4" />
-                </button>
+                <ChevronRight className="w-4 h-4 text-[#A1A19A]" />
               </div>
-              
-              <div className="grid grid-cols-3 gap-8 py-4 border-y border-slate-50 mt-4">
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-medium tracking-wider mb-1">关联产品</p>
-                  <p className="text-lg font-bold text-slate-700">{brand._count.products}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-medium tracking-wider mb-1">标准 FAQ</p>
-                  <p className="text-lg font-bold text-slate-700">{brand._count.faqs}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-medium tracking-wider mb-1">证据材料</p>
-                  <p className="text-lg font-bold text-slate-700">{brand._count.evidences}</p>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center mt-6">
-                <div className="flex gap-2">
-                  <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">机器可读性: 82%</span>
-                  <span className="px-2 py-1 bg-green-50 text-emerald-600 rounded text-[10px] font-medium">基线已建立</span>
-                </div>
-                <div className="flex gap-3 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
-                  <button className="text-xs font-medium text-slate-400 hover:text-slate-600">快速改写</button>
-                  <button className="text-xs font-medium text-blue-600 hover:underline">管理资料</button>
-                </div>
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#F0EFE9]">
+                 <StatItem label="产品" value={brand._count?.products || 0} />
+                 <StatItem label="术语" value={brand._count?.terms || 0} />
+                 <StatItem label="健康度" value="82%" highlight />
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal 部分保持一致风格 */}
+      {showModal && (
+        <div className="fixed inset-0 bg-[#1D1D1B]/40 backdrop-blur-[2px] flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-2xl border border-[#E5E5E1] shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="p-6 border-b border-[#F0EFE9] flex justify-between items-center bg-[#F9F9F8]">
+              <h3 className="font-bold text-base text-[#1D1D1B]">接入品牌资产</h3>
+              <Plus onClick={() => setShowModal(false)} className="w-5 h-5 text-[#A1A19A] cursor-pointer rotate-45" />
+            </div>
+            <form onSubmit={handleAddBrand} className="p-6 space-y-5">
+              <div className="space-y-1.5"><label className="text-[10px] font-black text-[#A1A19A] uppercase tracking-widest ml-1">品牌名</label><input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="claude-input py-2" /></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-black text-[#A1A19A] uppercase tracking-widest ml-1">所属行业</label><input required value={form.industry} onChange={e => setForm({...form, industry: e.target.value})} className="claude-input py-2" /></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-black text-[#A1A19A] uppercase tracking-widest ml-1">定位描述</label><textarea value={form.positioning} onChange={e => setForm({...form, positioning: e.target.value})} className="claude-input h-20 resize-none py-2" /></div>
+              <button type="submit" className="claude-button-primary w-full py-3.5 text-xs font-black uppercase tracking-widest">立即初始化</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatItem({ label, value, highlight }: any) {
+  return (
+    <div>
+      <p className="text-[9px] font-black text-[#A1A19A] uppercase tracking-widest mb-0.5">{label}</p>
+      <p className={cn("text-sm font-bold", highlight ? "text-[#D97757]" : "text-[#1D1D1B]")}>{value}</p>
     </div>
   );
 }

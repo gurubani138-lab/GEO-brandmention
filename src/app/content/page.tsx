@@ -1,138 +1,143 @@
-import { prisma } from '@/lib/prisma';
-import { PenTool, Wand2, History, Send } from 'lucide-react';
+"use client";
 
-export default async function ContentPage() {
-  const tasks = await prisma.contentTask.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 10
-  });
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Send, Loader2, CheckCircle2, Layout } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+export default function ContentPage() {
+  const [loading, setLoading] = useState(false);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState('');
+  const [inputText, setInputText] = useState('');
+  const [contentType, setContentType] = useState('品牌介绍 (GEO 优化版)');
+  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [result, setResult] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/asset/brand').then(r => r.json()).then(data => {
+      setBrands(data.data || []);
+      if (data.data?.length > 0) setSelectedBrandId(data.data[0].id);
+    });
+  }, []);
+
+  const handleGenerate = async () => {
+    if (brands.length === 0 || !inputText.trim()) return;
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const response = await fetch('/api/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandId: selectedBrandId, contentType, inputText, channel: selectedChannel }),
+      });
+      const data = await response.json();
+      if (data.success) setResult(data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="p-8">
-      <header className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">内容生产中心</h2>
-        <p className="text-slate-500 text-sm mt-1">在品牌资产约束下，批量产出 AI 友好型内容</p>
+    <div className="w-full">
+      <header className="mb-12">
+        <h2 className="text-[32px] font-semibold text-[#1D1D1B] tracking-tight flex items-center gap-3">
+          <Sparkles className="w-8 h-8 text-[#D97757]" />
+          智能改写引擎
+        </h2>
+        <p className="text-[#6B6B66] font-medium mt-2">基于实时品牌资产库，将素材一键转化为符合 AI 收录逻辑的结构化内容。</p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 左侧：创建任务 */}
-        <div className="lg:col-span-2 space-y-6">
-          <section className="bg-white border rounded-xl p-6 shadow-sm">
-            <h3 className="font-semibold text-slate-800 mb-6 flex items-center gap-2">
-              <Wand2 className="w-4 h-4 text-blue-500" />
-              新建生成任务
-            </h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-500">选择品牌</label>
-                <select className="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:outline-none">
-                  <option>京东云 (JD Cloud)</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-500">内容类型</label>
-                <select className="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:outline-none">
-                  <option>品牌介绍 (GEO 优化版)</option>
-                  <option>产品对比稿</option>
-                  <option>场景化 FAQ</option>
-                </select>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+        <div className="lg:col-span-3 space-y-10">
+          {/* Main Form */}
+          <section className="claude-card p-10 bg-white shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <ClaudeSelect label="品牌主体" value={selectedBrandId} onChange={setSelectedBrandId} options={brands.map(b => ({ label: b.name, value: b.id }))} />
+              <ClaudeSelect label="内容类型" value={contentType} onChange={setContentType} options={[{ label: 'GEO 优化版介绍', value: '品牌介绍 (GEO 优化版)' }, { label: '产品对比稿', value: '产品对比稿' }]} />
+              <ClaudeSelect label="目标渠道" value={selectedChannel} onChange={setSelectedChannel} options={[{ label: '通用标准', value: 'general' }, { label: '小红书', value: 'xiaohongshu' }, { label: '知乎', value: 'zhihu' }]} />
             </div>
-            <div className="space-y-1.5 mb-6">
-              <label className="text-xs font-medium text-slate-500">输入原始文本/需求 (可选)</label>
+
+            <div className="space-y-4 mb-8">
+              <label className="text-[11px] font-bold text-[#A1A19A] uppercase tracking-widest ml-1">原始输入文案</label>
               <textarea 
-                placeholder="请输入原始内容，智能体将结合资产库进行 GEO 友好化改写..." 
-                className="w-full p-3 border rounded-lg text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500/10"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="在此粘贴或输入需要 GEO 改写的内容..." 
+                className="claude-input min-h-[300px] resize-none text-[16px] leading-relaxed font-medium"
               />
             </div>
-            <button className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-sm transition-colors">
-              <Send className="w-4 h-4" />
-              开始智能生成
+
+            <button 
+              onClick={handleGenerate}
+              disabled={loading || !inputText.trim()}
+              className="claude-button-primary w-full flex items-center justify-center gap-3 py-4 text-sm font-bold uppercase tracking-[0.1em] border border-slate-900 shadow-none disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
+              {loading ? '正在执行算法优化...' : '执行 GEO 改写'}
             </button>
           </section>
 
-          {/* 生成记录 */}
-          <section className="bg-white border rounded-xl p-6 shadow-sm">
-            <h3 className="font-semibold text-slate-800 mb-6 flex items-center gap-2">
-              <History className="w-4 h-4 text-slate-400" />
-              最近生成历史
-            </h3>
-            <div className="space-y-3">
-              {tasks.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-xs text-slate-400 font-mono italic">-- 暂无历史生成任务 --</p>
-                </div>
-              ) : (
-                tasks.map(task => (
-                  <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 rounded text-blue-600">
-                        <PenTool className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700">{task.contentType}</p>
-                        <p className="text-[10px] text-slate-400">{task.createdAt.toLocaleString()}</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium">已完成</span>
+          {/* Result Area */}
+          {result && (
+            <section className="animate-in slide-in-from-bottom-8 duration-500">
+               <div className="claude-card p-10 bg-[#F9F9F8] border-[#D97757]/20">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-xl font-semibold text-[#1D1D1B] flex items-center gap-2.5">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                      优化建议稿已就绪
+                    </h3>
+                    <button className="px-5 py-2 bg-white border border-[#E5E5E1] rounded-xl text-xs font-bold text-[#6B6B66] uppercase tracking-widest hover:border-[#D97757] transition-all">复制内容</button>
                   </div>
-                ))
-              )}
-            </div>
-          </section>
+                  <div className="bg-white p-8 rounded-2xl border border-[#E5E5E1] shadow-sm prose prose-slate max-w-none">
+                    <pre className="text-[15px] text-[#1D1D1B] whitespace-pre-wrap font-sans leading-[1.8]">
+                      {result.outputText}
+                    </pre>
+                  </div>
+               </div>
+            </section>
+          )}
         </div>
 
-        {/* 右侧：资产约束提醒 */}
+        {/* Sidebar Info */}
         <div className="space-y-6">
-          <div className="bg-slate-900 text-white rounded-xl p-6 shadow-lg">
-            <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-blue-400" />
-              资产约束状态
-            </h4>
-            <div className="space-y-4">
-              <ConstraintItem label="品牌词库" status="ready" count={12} />
-              <ConstraintItem label="禁用语库" status="ready" count={5} />
-              <ConstraintItem label="合规证据" status="ready" count={32} />
-              <ConstraintItem label="产品参数" status="warning" count={2} />
-            </div>
-            <p className="text-[10px] text-slate-400 mt-6 leading-relaxed">
-              * 智能体将在生成过程中强制校验以上资产，确保内容不脱离事实边界且满足 GEO 结构化要求。
-            </p>
-          </div>
+           <div className="claude-card p-6 bg-[#F0EFE9] border-0">
+              <h4 className="text-[11px] font-bold text-[#6B6B66] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                 <Layout className="w-4 h-4" />
+                 优化约束清单
+              </h4>
+              <div className="space-y-6">
+                 <ConstraintItem label="术语一致性" count={12} />
+                 <ConstraintItem label="事实一致性" count={1} warning />
+                 <ConstraintItem label="广告法合规" count="Safe" />
+              </div>
+           </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ShieldCheck(props: any) {
+function ClaudeSelect({ label, value, onChange, options }: any) {
   return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  )
+    <div className="space-y-2.5">
+      <label className="text-[11px] font-bold text-[#A1A19A] uppercase tracking-widest ml-1">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full p-3 bg-white border border-[#E5E5E1] rounded-xl text-sm font-semibold outline-none focus:border-[#D97757] transition-all cursor-pointer">
+        {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
 }
 
-function ConstraintItem({ label, status, count }: any) {
+function ConstraintItem({ label, count, warning }: any) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-xs text-slate-300">{label}</span>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-mono">{count}</span>
-        <div className={`w-1.5 h-1.5 rounded-full ${status === 'ready' ? 'bg-blue-400' : 'bg-orange-400'}`} />
-      </div>
+      <span className="text-xs text-[#6B6B66] font-medium">{label}</span>
+      <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-md", warning ? "bg-red-100 text-red-700" : "bg-white text-[#1D1D1B]")}>
+        {count}
+      </span>
     </div>
   );
 }

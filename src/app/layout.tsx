@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
-
-const inter = Inter({ subsets: ["latin"] });
+import { Providers } from "@/components/layout/Providers";
 
 export const metadata: Metadata = {
   title: "BrandMention GEO 智能体",
@@ -17,13 +15,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className={`${inter.className} bg-white text-slate-900`}>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 ml-64 overflow-y-auto bg-slate-50/30">
-            {children}
-          </main>
-        </div>
+      <body className={`antialiased bg-[#F9F9F8] text-[#1D1D1B]`}>
+        <Providers>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            {/* 边距从 150px 缩小至 75px，内容区横向伸展，更贴合大屏排版 */}
+            <main className="flex-1 ml-60 h-screen overflow-y-auto overflow-x-hidden">
+              <div className="w-full px-[75px] py-10">
+                {children}
+              </div>
+            </main>
+          </div>
+        </Providers>
       </body>
     </html>
   );
