@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  planType      String   @default("professional")
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  brands        Brand[]
+  users         User[]
+}
+
+model User {
+  id            String   @id @default(cuid())
+  orgId         String
+  organization  Organization @relation(fields: [orgId], references: [id])
+  username      String   @unique
+  displayName   String
+  role          String   @default("member")
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Brand {
+  id                String   @id @default(cuid())
+  orgId             String
+  organization      Organization @relation(fields: [orgId], references: [id])
+  name              String
+  alias             String?
+  industry          String
+  positioning       String?
+  coreValues        String?
+  forbiddenPhrases  String?  // JSON string
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  products          Product[]
+  faqs              Faq[]
+  evidences         Evidence[]
+  contentTasks      ContentTask[]
+  questions         ObservationQuestion[]
+  metrics           MetricSnapshot[]
+  tickets           OptimizationTicket[]
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  brandId           String
+  brand             Brand    @relation(fields: [brandId], references: [id])
+  name              String
+  category          String
+  params            String?  // JSON string
+  scenarios         String?  // JSON string
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Faq {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  question      String
+  answer        String
+  riskLevel     String   @default("low")
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Evidence {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  title         String
+  url           String?
+  sourceType    String
+  authorityLevel String  @default("medium")
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ContentTask {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  type          String   // generate, rewrite
+  contentType   String   // brand_intro, product_intro, etc.
+  status        String   @default("pending")
+  inputText     String?
+  outputText    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ObservationQuestion {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  text          String
+  category      String
+  priority      String   @default("medium")
+  samples       ObservationSample[]
+}
+
+model ObservationSample {
+  id            String   @id @default(cuid())
+  questionId    String
+  question      ObservationQuestion @relation(fields: [questionId], references: [id])
+  platform      String
+  answerText    String
+  mentionFlag   Boolean  @default(false)
+  errorFlag     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model MetricSnapshot {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  platform      String
+  mentionRate   Float
+  errorRate     Float
+  createdAt     DateTime @default(now())
+}
+
+model OptimizationTicket {
+  id            String   @id @default(cuid())
+  brandId       String
+  brand         Brand    @relation(fields: [brandId], references: [id])
+  title         String
+  suggestion    String
+  status        String   @default("open")
+  priority      String   @default("medium")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
