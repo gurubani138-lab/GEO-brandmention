@@ -21,7 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { name: '运营看板', href: '/', icon: Layout },
+  { name: '运营看板', href: '/console', icon: Layout },
   { name: '资产管理', href: '/assets', icon: Database },
   { name: '内容生产', href: '/content', icon: MessageSquarePlus },
   { name: '观测中心', href: '/observe', icon: Eye },
@@ -33,6 +33,9 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  // 如果是公开首页，则不渲染侧边栏
+  if (pathname === '/') return null;
 
   return (
     <div className="w-60 border-r border-[#E5E5E1] bg-white h-screen flex flex-col fixed left-0 top-0 z-50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">

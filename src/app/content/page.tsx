@@ -57,7 +57,25 @@ export default function ContentPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <ClaudeSelect label="品牌主体" value={selectedBrandId} onChange={setSelectedBrandId} options={brands.map(b => ({ label: b.name, value: b.id }))} />
               <ClaudeSelect label="内容类型" value={contentType} onChange={setContentType} options={[{ label: 'GEO 优化版介绍', value: '品牌介绍 (GEO 优化版)' }, { label: '产品对比稿', value: '产品对比稿' }]} />
-              <ClaudeSelect label="目标渠道" value={selectedChannel} onChange={setSelectedChannel} options={[{ label: '通用标准', value: 'general' }, { label: '小红书', value: 'xiaohongshu' }, { label: '知乎', value: 'zhihu' }]} />
+              <ClaudeSelect
+                label="目标渠道"
+                value={selectedChannel}
+                onChange={setSelectedChannel}
+                options={[
+                  { label: '通用标准', value: 'general' },
+                  { label: '小红书', value: 'xiaohongshu' },
+                  { label: '知乎', value: 'zhihu' },
+                  { label: '微信公众号', value: 'wechat' },
+                  { label: '百家号', value: 'baijiahao' },
+                  { label: '百度百科', value: 'baidubaike' },
+                  { label: '今日头条', value: 'toutiao' },
+                  { label: '新浪', value: 'sina' },
+                  { label: '搜狐', value: 'sohu' },
+                  { label: '网易', value: 'wangyi' },
+                  { label: '腾讯新闻', value: 'tencentnews' },
+                  { label: '抖音', value: 'douyin' },
+                ]}
+              />
             </div>
 
             <div className="space-y-4 mb-8">

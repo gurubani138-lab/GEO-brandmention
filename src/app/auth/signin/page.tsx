@@ -24,10 +24,11 @@ export default function SignInPage() {
     });
 
     if (res?.error) {
-      setError("账号或密码错误");
+      setError("账号或密码错误，请联系管理员");
       setLoading(false);
     } else {
-      router.push("/");
+      // 核心修复：登录成功后跳转至工作台首页 (/console)
+      router.push("/console");
       router.refresh();
     }
   };

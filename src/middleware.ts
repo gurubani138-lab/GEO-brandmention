@@ -1,9 +1,9 @@
 export { default } from "next-auth/middleware";
 
 export const config = {
-  // 保护除 /auth/signin 以外的所有后台路径
+  // 仅保护后台路径，允许访问公开首页 (/) 和 登录页 (/auth/signin)
   matcher: [
-    "/",
+    "/console/:path*",
     "/assets/:path*",
     "/content/:path*",
     "/observe/:path*",

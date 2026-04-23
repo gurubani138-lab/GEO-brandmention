@@ -9,6 +9,7 @@ export default function ObservePage() {
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningBrandId, setRunningBrandId] = useState<string | null>(null);
+  const [selectedObserveBrandId, setSelectedObserveBrandId] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ brandId: '', text: '', category: '品牌认知' });
 
@@ -21,7 +22,10 @@ export default function ObservePage() {
       const [qData, bData] = await Promise.all([qRes.json(), bRes.json()]);
       setQuestions(qData.data || []);
       setBrands(bData.data || []);
-      if (bData.data?.length > 0) setForm(f => ({ ...f, brandId: bData.data[0].id }));
+      if (bData.data?.length > 0) {
+        setForm(f => ({ ...f, brandId: bData.data[0].id }));
+        setSelectedObserveBrandId(bData.data[0].id);
+      }
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
@@ -62,17 +66,41 @@ export default function ObservePage() {
             <Plus className="w-3.5 h-3.5 text-[#D97757]" />
             配置题库
           </button>
-          {brands.map(brand => (
-            <button 
-              key={brand.id}
-              disabled={!!runningBrandId}
-              onClick={() => runObservation(brand.id)}
+          <div className="flex items-center gap-3">
+            <div className="space-y-1">
+              <div className="text-[10px] font-black text-[#A1A19A] uppercase tracking-widest ml-1">
+                选择品牌
+              </div>
+              <select
+                value={selectedObserveBrandId}
+                onChange={(e) => setSelectedObserveBrandId(e.target.value)}
+                disabled={brands.length === 0 || !!runningBrandId}
+                className="w-[220px] p-2.5 bg-white border border-[#E5E5E1] rounded-xl text-xs font-black outline-none focus:border-[#D97757] transition-all cursor-pointer disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                {brands.length === 0 && (
+                  <option value="">暂无品牌</option>
+                )}
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              disabled={!selectedObserveBrandId || !!runningBrandId}
+              onClick={() => selectedObserveBrandId && runObservation(selectedObserveBrandId)}
               className="claude-button-primary py-2.5 text-xs font-black uppercase flex items-center gap-2"
             >
-              {runningBrandId === brand.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5 text-orange-400" />}
-              观测 {brand.name}
+              {runningBrandId === selectedObserveBrandId ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Globe className="w-3.5 h-3.5 text-orange-400" />
+              )}
+              观测
             </button>
-          ))}
+          </div>
         </div>
       </header>
 
